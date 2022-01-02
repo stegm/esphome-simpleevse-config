@@ -1,0 +1,130 @@
+substitutions:
+  lower_devicename: simpleevse
+  devicename: SimpleEVSE
+
+<<: !include common.yaml
+
+debug:
+
+# Enable logging
+logger:
+  level: VERBOSE #DEBUG
+
+uart:
+  id: uart_modbus
+  baud_rate: 9600
+  rx_pin: GPIO16
+  tx_pin: GPIO17
+
+modbus:
+  id: modbus_simpleevse
+
+modbus_controller:
+  - id: simpleevse_device
+    modbus_id: modbus_simpleevse
+    address: 0x01
+    update_interval: 5s
+    setup_priority: -10
+
+sensor:
+  - platform: modbus_controller
+    modbus_controller_id: simpleevse_device
+    id: set_charge_current
+    register_type: holding
+    address: 1000
+    value_type: U_WORD
+    name: ${devicename} Set Charge Current
+    unit_of_measurement: A
+    device_class: current
+    state_class: measurement
+    accuracy_decimals: 0
+
+  - platform: modbus_controller
+    modbus_controller_id: simpleevse_device
+    id: actual_charge_current
+    register_type: holding
+    address: 1001
+    value_type: U_WORD
+    name: ${devicename} Actual Charge Current
+    unit_of_measurement: A
+    device_class: current
+    state_class: measurement
+    accuracy_decimals: 0
+
+  - platform: modbus_controller
+    modbus_controller_id: simpleevse_device
+    id: vehicle_state
+    register_type: holding
+    address: 1002
+    value_type: U_WORD
+    name: ${devicename} Vehicle State
+    accuracy_decimals: 0
+
+  - platform: modbus_controller
+    modbus_controller_id: simpleevse_device
+    id: limit_current
+    register_type: holding
+    address: 1003
+    value_type: U_WORD
+    name: ${devicename} Limit Current
+    unit_of_measurement: A
+    device_class: current
+    entity_category: diagnostic
+    accuracy_decimals: 0
+
+  - platform: modbus_controller
+    modbus_controller_id: simpleevse_device
+    id: ctrl_bits
+    register_type: holding
+    address: 1004
+    value_type: U_WORD
+    name: ${devicename} Control Bits
+    entity_category: diagnostic
+    disabled_by_default: true
+
+  - platform: modbus_controller
+    modbus_controller_id: simpleevse_device
+    id: firmware_revision
+    register_type: holding
+    address: 1005
+    value_type: U_WORD
+    name: ${devicename} Firmware revision
+    unit_of_measurement: A
+    entity_category: diagnostic
+    accuracy_decimals: 0
+
+  - platform: modbus_controller
+    modbus_controller_id: simpleevse_device
+    id: evse_state
+    register_type: holding
+    address: 1006
+    value_type: U_WORD
+    name: ${devicename} EVSE State
+    accuracy_decimals: 0
+
+switch:
+  - platform: modbus_controller
+    modbus_controller_id: simpleevse_device
+    id: disable_charging
+    name: ${devicename} Disable Charging
+    register_type: holding
+    address: 1004
+    bitmask: 1
+
+number:
+  - platform: modbus_controller
+    modbus_controller_id: simpleevse_device
+    id: set_charge_current_input
+    address: 1000
+    value_type: U_WORD
+    name: ${devicename} Set Charge Current (Input)
+    unit_of_measurement: A
+    min_value: 0
+    max_value: 20
+    step: 1
+    write_lambda: |-
+      if (x > 0 && x < 6) {
+        return 6;
+      }
+      return x;
+
